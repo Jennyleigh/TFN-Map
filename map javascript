@@ -10,8 +10,12 @@ function initMap(locations) {
     const filterCount = document.getElementById("count");
     locations = Array.isArray(locations) ? locations : [];
     let markers = [];
+* rz7wub-codex/add-filtering-and-route-planning-functionality
+    let markerTotal = 0;
+=======
     let loTotal = 0;
     let loCount = 0;
+
     /*
      * Removed the marker cluster group for now. If clustering is desired in the
      * future the configuration below can be re-enabled.
@@ -103,13 +107,13 @@ function initMap(locations) {
         <a target="_blank" href="http://maps.google.com/maps?ll=${GPSLatitude},${GPSLongitude}">Open in Google Maps</a><br><br>${products}`).addTo(map);
     	marker.depotData = location;
     	// marker.bindTooltip("my tooltip text").openTooltip();
-      loTotal ++;
+      markerTotal++;
       markers.push(marker);
     });
     
     //map.addLayer(markersGroup);
-    filterCount.innerText = loTotal;
-    total.innerText = loTotal;
+    filterCount.innerText = markerTotal;
+    total.innerText = markerTotal;
     
     
     var dropdown = document.getElementById('routeFilter');
@@ -120,7 +124,11 @@ function initMap(locations) {
       var selectedRoute = dropdown.value;
       var selectedPrice = priceDropdown.value;
       var searchTerm = depotSearch.value.toLowerCase();
+* rz7wub-codex/add-filtering-and-route-planning-functionality
+      var visibleCount = 0;
+=======
       var loCount = 0;
+
 
       markers.forEach(function(marker) {
         var depotData = marker.depotData;
@@ -153,14 +161,22 @@ function initMap(locations) {
         if (show) {
           marker.addTo(map);
           marker.visible = true;
+* rz7wub-codex/add-filtering-and-route-planning-functionality
+          visibleCount++;
+=======
           loCount++;
+
         } else {
           marker.remove();
           marker.visible = false;
         }
       });
 
+* rz7wub-codex/add-filtering-and-route-planning-functionality
+    filterCount.innerText = visibleCount;
+=======
       filterCount.innerText = loCount;
+
     }
 
     dropdown.addEventListener('change', applyFilters);
@@ -412,4 +428,6 @@ fetchLocations()
     console.error('Failed to load depot data', err);
     initMap([]);
   });
+* rz7wub-codex/add-filtering-and-route-planning-functionality
+=======
 </script>
