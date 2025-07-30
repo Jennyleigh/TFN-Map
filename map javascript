@@ -6,14 +6,9 @@ const options = {
   }
 };
 
-fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnData', options)
-  .then(response => response.json())
-  .then(response => {
-    console.log(response)
+function initMap(locations) {
     const total = document.getElementById("total");
     const filterCount = document.getElementById("count");
-    // Assuming your array of objects is stored in a variable called `locations`
-    let locations = response.body;
     let markers = [];
     let loTotal = 0;
     let loCount = 0;
@@ -322,8 +317,7 @@ fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnDat
       noResults: ({ currentValue, template }) =>
         template(`<li>No results found: "${currentValue}"</li>`),
     });
-  })
-  .catch(err => console.error(err));
+
 
 let routeDropdown = document.getElementById("routeFilter");
 let nThreeButton = document.getElementById("n3");
@@ -380,4 +374,16 @@ routeBtns.forEach((route) => {
         }
     })
 })
+}
+
+fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnData', options)
+  .then(res => res.json())
+  .then(data => {
+    console.log(data);
+    initMap(data.body || data);
+  })
+  .catch(err => {
+    console.error(err);
+    initMap([]);
+  });
 </script>
