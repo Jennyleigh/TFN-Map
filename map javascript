@@ -12,15 +12,18 @@ function initMap(locations) {
     let markers = [];
     let loTotal = 0;
     let loCount = 0;
-    /*let markersGroup = L.markerClusterGroup({
-    	spiderfyOnMaxZoom: true,
-    	showCoverageOnHover: true,
-    	zoomToBoundsOnClick: true,
-      animate: true,
-      maxClusterRadius: 0
-    });*/
-    
-    console.log(locations);
+    /*
+     * Removed the marker cluster group for now. If clustering is desired in the
+     * future the configuration below can be re-enabled.
+     *
+     * let markersGroup = L.markerClusterGroup({
+     *   spiderfyOnMaxZoom: true,
+     *   showCoverageOnHover: true,
+     *   zoomToBoundsOnClick: true,
+     *   animate: true,
+     *   maxClusterRadius: 0
+     * });
+     */
     
     // Initialize the map
     const map = L.map('map', { dragging: !L.Browser.mobile, scrollWheelZoom: false }).setView([-25.146930436088034, 25.346189591867144], 5);
@@ -108,7 +111,6 @@ function initMap(locations) {
     filterCount.innerText = loTotal;
     total.innerText = loTotal;
     
-    console.log(map);
     
     var dropdown = document.getElementById('routeFilter');
     var priceDropdown = document.getElementById('priceFilter');
@@ -311,7 +313,7 @@ function initMap(locations) {
       },
     
       onSelectedItem: ({ index, element, object }) => {
-        console.log("onSelectedItem:", index, element, object);
+        // item selected from search dropdown
       },
     
       noResults: ({ currentValue, template }) =>
@@ -394,7 +396,6 @@ function fetchLocations(retries = 3, delay = 1000) {
 
 fetchLocations()
   .then(data => {
-    console.log(data);
     let locations = [];
     if (data.body) {
       try {
