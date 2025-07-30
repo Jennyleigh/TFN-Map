@@ -6,14 +6,9 @@ const options = {
   }
 };
 
-fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnData', options)
-  .then(response => response.json())
-  .then(response => {
-    console.log(response)
+function initMap(locations) {
     const total = document.getElementById("total");
     const filterCount = document.getElementById("count");
-    // Assuming your array of objects is stored in a variable called `locations`
-    let locations = response.body;
     let markers = [];
     let loTotal = 0;
     let loCount = 0;
@@ -37,14 +32,14 @@ fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnDat
     
     var r2s = L.icon({
         iconUrl: 'https://tfn.co.za/wp-content/uploads/2024/09/r2s.svg',
-        iconSize: [34, 44.5],
-        iconAnchor: [17, 44.5],
+        iconSize: [40, 50],
+        iconAnchor: [20, 50],
         popupAnchor: [0, -45]
     });
     var r2sPlus = L.icon({
         iconUrl: 'https://tfn.co.za/wp-content/uploads/2024/09/r2sPlus.svg',
-        iconSize: [34, 44.5],
-        iconAnchor: [17, 44.5],
+        iconSize: [40, 50],
+        iconAnchor: [20, 50],
         popupAnchor: [0, -45]
     });
     var ss = L.icon({
@@ -116,46 +111,140 @@ fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnDat
     console.log(map);
     
     var dropdown = document.getElementById('routeFilter');
-    dropdown.addEventListener('change', function() {
-      var selectedRoute = this.value;
+    var priceDropdown = document.getElementById('priceFilter');
+    var depotSearch = document.getElementById('depotSearch');
+
+    function applyFilters() {
+      var selectedRoute = dropdown.value;
+      var selectedPrice = priceDropdown.value;
+      var searchTerm = depotSearch.value.toLowerCase();
       var loCount = 0;
-    
-      // Check if the selected option is "all"
-      if (selectedRoute === 'all') {
-        // Show all markers with staggered animation
-        markers.forEach(function(marker, index) {
-          marker.remove();
+
+      markers.forEach(function(marker) {
+        var depotData = marker.depotData;
+        var show = true;
+
+        if (selectedRoute !== 'all') {
+          if (selectedRoute === 'Cross_Border') {
+            show = show && !depotData.IsInSouthAfrica;
+          } else {
+            show = show && depotData[selectedRoute] === "True";
+          }
+        }
+
+        if (selectedPrice !== 'all') {
+          if (selectedPrice === 'Refuel2Save+') {
+            show = show && depotData.hasRefuel2SavePlusPromotions;
+          } else if (selectedPrice === 'Refuel2Save') {
+            show = show && depotData.isRefuel2SaveDepot && !depotData.hasRefuel2SavePlusPromotions && depotData.IsInSouthAfrica;
+          } else if (selectedPrice === 'Classic') {
+            show = show && !depotData.isRefuel2SaveDepot && depotData.IsInSouthAfrica;
+          } else if (selectedPrice === 'Cross Border') {
+            show = show && !depotData.IsInSouthAfrica;
+          }
+        }
+
+        if (searchTerm) {
+          show = show && depotData.Title.toLowerCase().includes(searchTerm);
+        }
+
+        if (show) {
           marker.addTo(map);
+          marker.visible = true;
           loCount++;
-        });
-      } else if (selectedRoute === 'Cross_Border') {
-        markers.forEach(function(marker, index) {
-          var depotData = marker.depotData;
-          var routeValue = !depotData.IsInSouthAfrica;
-          if (routeValue === true) {
-            marker.addTo(map);
-            loCount++;
-          } else {
-            // Hide marker
-            marker.remove();
-          }
-        });
-      } else {
-        // Loop through the markers and show/hide based on the selected route
-        markers.forEach(function(marker, index) {
-          var depotData = marker.depotData;
-          var routeValue = depotData[selectedRoute];
-          if (routeValue === "True") {
-            marker.addTo(map);
-            loCount++;
-          } else {
-            // Hide marker
-            marker.remove();
-          }
-        });
-      }
+        } else {
+          marker.remove();
+          marker.visible = false;
+        }
+      });
+
       filterCount.innerText = loCount;
-      console.log(markers);
+    }
+
+    dropdown.addEventListener('change', applyFilters);
+    priceDropdown.addEventListener('change', applyFilters);
+    depotSearch.addEventListener('input', applyFilters);
+    applyFilters();
+
+    let startCoords = null;
+    let endCoords = null;
+
+    new Autocomplete("routeStart", {
+      selectFirst: true,
+      howManyCharacters: 2,
+      onSearch: ({ currentValue }) => {
+        const api = `https://nominatim.openstreetmap.org/search?format=geojson&limit=5&city=${encodeURI(
+          currentValue
+        )}`;
+
+        return fetch(api)
+          .then((response) => response.json())
+          .then((data) => data.features)
+          .catch((error) => {
+            console.error(error);
+            return [];
+          });
+      },
+      onSubmit: ({ object }) => {
+        const [lng, lat] = object.geometry.coordinates;
+        startCoords = [lat, lng];
+      },
+    });
+
+    new Autocomplete("routeEnd", {
+      selectFirst: true,
+      howManyCharacters: 2,
+      onSearch: ({ currentValue }) => {
+        const api = `https://nominatim.openstreetmap.org/search?format=geojson&limit=5&city=${encodeURI(
+          currentValue
+        )}`;
+
+        return fetch(api)
+          .then((response) => response.json())
+          .then((data) => data.features)
+          .catch((error) => {
+            console.error(error);
+            return [];
+          });
+      },
+      onSubmit: ({ object }) => {
+        const [lng, lat] = object.geometry.coordinates;
+        endCoords = [lat, lng];
+      },
+    });
+
+    let routingControl;
+    document.getElementById("planRoute").addEventListener("click", function() {
+      if (!startCoords || !endCoords) {
+        alert("Please select both start and end locations");
+        return;
+      }
+      if (routingControl) {
+        map.removeControl(routingControl);
+      }
+      routingControl = L.Routing.control({
+        waypoints: [L.latLng(startCoords[0], startCoords[1]), L.latLng(endCoords[0], endCoords[1])],
+        addWaypoints: false,
+        draggableWaypoints: false,
+        routeWhileDragging: false,
+        show: false,
+      }).addTo(map);
+
+      routingControl.on('routesfound', function(e) {
+        const coords = e.routes[0].coordinates.map(c => L.latLng(c.lat, c.lng));
+        let count = 0;
+        markers.forEach(function(marker) {
+          if (!marker.visible) { marker.remove(); return; }
+          const near = coords.some(pt => marker.getLatLng().distanceTo(pt) <= 10000);
+          if (near) {
+            marker.addTo(map);
+            count++;
+          } else {
+            marker.remove();
+          }
+        });
+        filterCount.innerText = count;
+      });
     });
     
     // minimal configure
@@ -228,8 +317,7 @@ fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnDat
       noResults: ({ currentValue, template }) =>
         template(`<li>No results found: "${currentValue}"</li>`),
     });
-  })
-  .catch(err => console.error(err));
+
 
 let routeDropdown = document.getElementById("routeFilter");
 let nThreeButton = document.getElementById("n3");
@@ -286,4 +374,16 @@ routeBtns.forEach((route) => {
         }
     })
 })
+}
+
+fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnData', options)
+  .then(res => res.json())
+  .then(data => {
+    console.log(data);
+    initMap(data.body || data);
+  })
+  .catch(err => {
+    console.error(err);
+    initMap([]);
+  });
 </script>
