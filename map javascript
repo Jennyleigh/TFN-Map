@@ -1,4 +1,3 @@
-<script type="application/javascript">
 const options = {
   method: 'GET',
   headers: {
@@ -412,4 +411,3 @@ fetchLocations()
     console.error('Failed to load depot data', err);
     initMap([]);
   });
-</script>
