@@ -10,7 +10,7 @@ function initMap(locations) {
     const filterCount = document.getElementById("count");
     locations = Array.isArray(locations) ? locations : [];
     let markers = [];
-    let loTotal = 0;
+    let markerTotal = 0;
     /*
      * Removed the marker cluster group for now. If clustering is desired in the
      * future the configuration below can be re-enabled.
@@ -102,13 +102,13 @@ function initMap(locations) {
         <a target="_blank" href="http://maps.google.com/maps?ll=${GPSLatitude},${GPSLongitude}">Open in Google Maps</a><br><br>${products}`).addTo(map);
     	marker.depotData = location;
     	// marker.bindTooltip("my tooltip text").openTooltip();
-      loTotal ++;
+      markerTotal++;
       markers.push(marker);
     });
     
     //map.addLayer(markersGroup);
-    filterCount.innerText = loTotal;
-    total.innerText = loTotal;
+    filterCount.innerText = markerTotal;
+    total.innerText = markerTotal;
     
     
     var dropdown = document.getElementById('routeFilter');
@@ -119,7 +119,7 @@ function initMap(locations) {
       var selectedRoute = dropdown.value;
       var selectedPrice = priceDropdown.value;
       var searchTerm = depotSearch.value.toLowerCase();
-      var loCount = 0;
+      var visibleCount = 0;
 
       markers.forEach(function(marker) {
         var depotData = marker.depotData;
@@ -152,14 +152,14 @@ function initMap(locations) {
         if (show) {
           marker.addTo(map);
           marker.visible = true;
-          loCount++;
+          visibleCount++;
         } else {
           marker.remove();
           marker.visible = false;
         }
       });
 
-      filterCount.innerText = loCount;
+    filterCount.innerText = visibleCount;
     }
 
     dropdown.addEventListener('change', applyFilters);
