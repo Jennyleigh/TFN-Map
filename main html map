@@ -364,8 +364,18 @@
         <option value="Coal">Coal</option>
         <option value="Manganese">Manganese</option>
         <option value="Maputo_Corridor">Maputo Corridor</option>
-        <option value="Cross_Border">Cross Border</option>
+      <option value="Cross_Border">Cross Border</option>
       </select></form>
+  </div>
+  <div class="map-subtitle">Filter by Pricing</div>
+  <div class="route-filter w-form">
+    <select id="priceFilter" class="routes w-select">
+        <option value="all">All</option>
+        <option value="Refuel2Save+">Refuel2Save+</option>
+        <option value="Refuel2Save">Refuel2Save</option>
+        <option value="Classic">Classic</option>
+        <option value="Cross Border">Cross Border</option>
+    </select>
   </div>
   <div class="map-subtitle hidden">Legend</div>
   <div class="index-item"><img src="https://tfn.co.za/wp-content/uploads/2024/09/r2sPlus.svg" loading="lazy" alt="" class="pin-icon-ex">
@@ -389,6 +399,10 @@
     <div class="search-outer w-embed">
       <div class="auto-search-wrapper">
         <input type="text" autocomplete="on" id="search" class="full-width" placeholder="Enter the city name">
+        <input type="text" id="depotSearch" class="full-width" placeholder="Search depot">
+        <input type="text" autocomplete="on" id="routeStart" class="full-width" placeholder="Route start">
+        <input type="text" autocomplete="on" id="routeEnd" class="full-width" placeholder="Route end">
+        <button type="button" id="planRoute" class="routes">Plan Route</button>
       </div>
     </div>
     <div id="map" class="map"></div>
