@@ -17,6 +17,11 @@ fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnDat
     let markers = [];
     let loTotal = 0;
     let loCount = 0;
+    let selectedRoute = 'all';
+    let minPrice = null;
+    let maxPrice = null;
+    let routeLine = null;
+    let routeString = null;
     /*let markersGroup = L.markerClusterGroup({
     	spiderfyOnMaxZoom: true,
     	showCoverageOnHover: true,
@@ -37,15 +42,15 @@ fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnDat
     
     var r2s = L.icon({
         iconUrl: 'https://tfn.co.za/wp-content/uploads/2024/09/r2s.svg',
-        iconSize: [34, 44.5],
-        iconAnchor: [17, 44.5],
-        popupAnchor: [0, -45]
+        iconSize: [40, 50],
+        iconAnchor: [20, 50],
+        popupAnchor: [0, -50]
     });
     var r2sPlus = L.icon({
         iconUrl: 'https://tfn.co.za/wp-content/uploads/2024/09/r2sPlus.svg',
-        iconSize: [34, 44.5],
-        iconAnchor: [17, 44.5],
-        popupAnchor: [0, -45]
+        iconSize: [40, 50],
+        iconAnchor: [20, 50],
+        popupAnchor: [0, -50]
     });
     var ss = L.icon({
         iconUrl: 'https://tfn.co.za/wp-content/uploads/2024/09/newCs.svg',
@@ -112,51 +117,82 @@ fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnDat
     //map.addLayer(markersGroup);
     filterCount.innerText = loTotal;
     total.innerText = loTotal;
-    
+
     console.log(map);
-    
-    var dropdown = document.getElementById('routeFilter');
-    dropdown.addEventListener('change', function() {
-      var selectedRoute = this.value;
-      var loCount = 0;
-    
-      // Check if the selected option is "all"
-      if (selectedRoute === 'all') {
-        // Show all markers with staggered animation
-        markers.forEach(function(marker, index) {
-          marker.remove();
+
+    function filterMarkers() {
+      let count = 0;
+      markers.forEach(function(marker) {
+        const data = marker.depotData;
+        let routeMatch = true;
+        if (selectedRoute !== 'all') {
+          if (selectedRoute === 'Cross_Border') {
+            routeMatch = !data.IsInSouthAfrica;
+          } else {
+            routeMatch = data[selectedRoute] === "True";
+          }
+        }
+        let priceValue = parseFloat(data.price);
+        let priceMatch = true;
+        if (minPrice !== null && priceValue < minPrice) priceMatch = false;
+        if (maxPrice !== null && priceValue > maxPrice) priceMatch = false;
+        let lineMatch = true;
+        if (routeString) {
+          const pt = turf.point([marker.getLatLng().lng, marker.getLatLng().lat]);
+          const dist = turf.pointToLineDistance(pt, routeString, {units:'kilometers'});
+          lineMatch = dist <= 5;
+        }
+        if (routeMatch && priceMatch && lineMatch) {
           marker.addTo(map);
-          loCount++;
-        });
-      } else if (selectedRoute === 'Cross_Border') {
-        markers.forEach(function(marker, index) {
-          var depotData = marker.depotData;
-          var routeValue = !depotData.IsInSouthAfrica;
-          if (routeValue === true) {
-            marker.addTo(map);
-            loCount++;
-          } else {
-            // Hide marker
-            marker.remove();
-          }
-        });
-      } else {
-        // Loop through the markers and show/hide based on the selected route
-        markers.forEach(function(marker, index) {
-          var depotData = marker.depotData;
-          var routeValue = depotData[selectedRoute];
-          if (routeValue === "True") {
-            marker.addTo(map);
-            loCount++;
-          } else {
-            // Hide marker
-            marker.remove();
-          }
-        });
-      }
-      filterCount.innerText = loCount;
-      console.log(markers);
+          count++;
+        } else {
+          marker.remove();
+        }
+      });
+      filterCount.innerText = count;
+    }
+
+    var routeDropdown = document.getElementById('routeFilter');
+    routeDropdown.addEventListener('change', function() {
+      selectedRoute = this.value;
+      filterMarkers();
     });
+
+    document.getElementById('applyPrice').addEventListener('click', function() {
+      const min = document.getElementById('minPrice').value;
+      const max = document.getElementById('maxPrice').value;
+      minPrice = min === '' ? null : parseFloat(min);
+      maxPrice = max === '' ? null : parseFloat(max);
+      filterMarkers();
+    });
+
+    function geocode(q) {
+      return fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`)
+        .then(res => res.json()).then(r => r[0]);
+    }
+
+    document.getElementById('planRoute').addEventListener('click', function() {
+      const start = document.getElementById('routeStart').value;
+      const end = document.getElementById('routeEnd').value;
+      if (!start || !end) return;
+      Promise.all([geocode(start), geocode(end)]).then(([s,e]) => {
+        if (!s || !e) return;
+        const startCoords = [parseFloat(s.lat), parseFloat(s.lon)];
+        const endCoords = [parseFloat(e.lat), parseFloat(e.lon)];
+        fetch(`https://router.project-osrm.org/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=geojson`)
+          .then(res => res.json())
+          .then(data => {
+            if (routeLine) map.removeLayer(routeLine);
+            const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+            routeLine = L.polyline(coords, {color:'blue', weight:4}).addTo(map);
+            map.fitBounds(routeLine.getBounds());
+            routeString = turf.lineString(data.routes[0].geometry.coordinates);
+            filterMarkers();
+          });
+      });
+    });
+
+    filterMarkers();
     
     // minimal configure
     new Autocomplete("search", {
@@ -231,7 +267,7 @@ fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnDat
   })
   .catch(err => console.error(err));
 
-let routeDropdown = document.getElementById("routeFilter");
+routeDropdown = document.getElementById("routeFilter");
 let nThreeButton = document.getElementById("n3");
 let maputoButton = document.getElementById("maputo");
 let coalButton = document.getElementById("coal");

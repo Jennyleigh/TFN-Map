@@ -246,6 +246,12 @@
 .routes:hover {
   color: #EB600A;
 }
+.price-filter, .route-plan {
+  display: flex;
+  align-items: center;
+  grid-column-gap: 5px;
+  margin-bottom: 10px;
+}
 .index-item {
   display: flex;
   align-items: center;
@@ -366,6 +372,18 @@
         <option value="Maputo_Corridor">Maputo Corridor</option>
         <option value="Cross_Border">Cross Border</option>
       </select></form>
+  </div>
+  <div id="price-title" class="map-subtitle">Filter by Price</div>
+  <div class="price-filter">
+    <input type="number" id="minPrice" placeholder="Min" />
+    <input type="number" id="maxPrice" placeholder="Max" />
+    <button id="applyPrice">Apply</button>
+  </div>
+  <div class="map-subtitle">Plan Route</div>
+  <div class="route-plan">
+    <input type="text" id="routeStart" placeholder="Start" />
+    <input type="text" id="routeEnd" placeholder="End" />
+    <button id="planRoute">Plan</button>
   </div>
   <div class="map-subtitle hidden">Legend</div>
   <div class="index-item"><img src="https://tfn.co.za/wp-content/uploads/2024/09/r2sPlus.svg" loading="lazy" alt="" class="pin-icon-ex">
