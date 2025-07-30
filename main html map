@@ -1,0 +1,397 @@
+<style>
+.n3 {
+    scroll-margin-top: 100px;
+}
+.active {
+    background-color: black!important;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.active:after {
+    content: 'Selected';
+    position: absolute;
+    bottom: -25px;
+    font-size: 13px;
+    font-weight: 600;
+    color: black;
+}
+.leaflet-popup-content-wrapper {
+	font-family: "Montserrat";
+}
+.open-site {
+  color: #fff!important;
+  position: relative;
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding-top: 5px;
+  padding-right: 10px;
+  padding-bottom: 5px;
+  padding-left: 10px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  background-color: #b4c936;
+  color: hsla(0, 0.00%, 100.00%, 1.00);
+  font-weight: 600;
+  text-decoration: none;
+}
+.open-site:hover {
+  background-color: hsla(68.57142857142857, 64.23%, 36.94%, 1.00);
+}
+.map-sections {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  grid-column-gap: 20px;
+  grid-row-gap: 20px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  color: black;
+  z-index: 999;
+}
+@media screen and (max-width: 1024px) {
+.map-sections {
+  flex-direction: row;
+}
+}
+.hide {
+  display: none;
+}
+.marker-cluster-small {
+  width: 40px;
+  height: 40px;
+  padding-top: 9px;
+  padding-right: 11px;
+  padding-bottom: 11px;
+  padding-left: 11px;
+  justify-content: center;
+  align-items: center;
+  border-top-left-radius: 50%;
+  border-top-right-radius: 50%;
+  border-bottom-left-radius: 50%;
+  border-bottom-right-radius: 50%;
+  background-color: hsla(198.06451612903226, 80.87%, 45.10%, 0.70);
+  box-shadow: 0 0 0 5px hsla(198.06451612903226, 80.87%, 45.10%, 0.20),
+    /* 0 0 0 8px hsla(208.42105263157896, 100.00%, 33.53%, 0.10), */
+    0 0 20px 5px hsla(198.06451612903226, 80.87%, 45.10%, 0.50);
+  backdrop-filter: blur(3px);
+  font-family: Montserrat;
+  color: hsla(0, 0.00%, 100.00%, 1.00);
+  font-weight: 600;
+  text-align: center;
+}
+.marker-cluster-medium {
+  width: 40px;
+  height: 40px;
+  padding-top: 9px;
+  padding-right: 11px;
+  padding-bottom: 11px;
+  padding-left: 11px;
+  justify-content: center;
+  align-items: center;
+  border-top-left-radius: 50%;
+  border-top-right-radius: 50%;
+  border-bottom-left-radius: 50%;
+  border-bottom-right-radius: 50%;
+  background-color: hsla(23.317535545023695, 90.56%, 54.31%, 0.70);
+  box-shadow: 0 0 0 5px hsla(23.317535545023695, 90.56%, 54.31%, 0.30), 0 0 0 10px hsla(23.317535545023695, 90.56%, 54.31%, 0.20),
+    /* 0 0 0 13px hsla(208.42105263157896, 100.00%, 33.53%, 0.10), */
+    0 0 20px 5px hsla(23.317535545023695, 90.56%, 54.31%, 0.50);
+  backdrop-filter: blur(2px);
+  font-family: Montserrat;
+  color: hsla(0, 0.00%, 100.00%, 1.00);
+  font-weight: 600;
+  text-align: center;
+}
+.marker-cluster-large {
+  width: 40px;
+  height: 40px;
+  padding-top: 9px;
+  padding-right: 11px;
+  padding-bottom: 11px;
+  padding-left: 11px;
+  justify-content: center;
+  align-items: center;
+  border-top-left-radius: 50%;
+  border-top-right-radius: 50%;
+  border-bottom-left-radius: 50%;
+  border-bottom-right-radius: 50%;
+  background-color: hsla(0, 0.00%, 0.00%, 0.70);
+  box-shadow: 0 0 0 5px hsla(208.42105263157896, 0.00%, 0.00%, 0.30), 0 0 0 10px hsla(208.42105263157896, 0.00%, 0.00%, 0.20), 0 0 0 13px hsla(208.42105263157896, 0.00%, 0.00%, 0.10);
+  backdrop-filter: blur(2px);
+  font-family: Montserrat;
+  color: hsla(0, 0.00%, 100.00%, 1.00);
+  font-weight: 600;
+  text-align: center;
+}
+.map-sections {
+  display: flex;
+  padding-top: 10px;
+  padding-right: 10px;
+  padding-bottom: 10px;
+  padding-left: 10px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  grid-column-gap: 20px;
+  grid-row-gap: 20px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  color: #575757;
+}
+
+.map-sections.inside {
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0%;
+}
+
+.map-sections.inside.left {
+  justify-content: flex-start;
+  flex-grow: 0;
+  flex-shrink: 1;
+  flex-basis: auto;
+}
+
+@media screen and (max-width: 1024px) {
+.map-sections.inside.left {
+  flex-direction: row;
+  justify-content: space-between;
+}
+}
+@media screen and (max-width: 767px) {
+.map-sections.inside.left {
+  padding-top: 10px;
+  padding-right: 0px;
+  padding-bottom: 10px;
+  padding-left: 0px;
+}
+.map-sections.inside.left {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  grid-column-gap: 10px;
+  grid-row-gap: 20px;
+}
+}
+.map-subtitle {
+  color: #575757;
+  font-weight: 600;
+}
+@media screen and (max-width: 1024px) {
+.map-subtitle {
+  width: 100%;
+}
+}
+.map-subtitle.details {
+  font-size: 12px;
+  line-height: 12px;
+  font-weight: 500;
+}
+@media screen and (max-width: 1024px) {
+.map-subtitle.details {
+  width: 100%;
+}
+}
+.filter-count {
+  display: inline-block;
+  transform: translate(0px, 1px);
+  color: #f47321;
+  font-size: 17px;
+  font-weight: 600;
+  min-width: 25px;
+  text-align: center;
+}
+.route-filter {
+  z-index: 2;
+  margin-bottom: 0px;
+}
+@media screen and (max-width: 1024px) {
+.route-filter {
+  width: 100%;
+}
+}
+.routes {
+  margin-bottom: 0px;
+  border-top-style: none;
+  border-top-width: 0px;
+  border-top-color: black;
+  border-right-style: none;
+  border-right-width: 0px;
+  border-right-color: black;
+  border-bottom-style: none;
+  border-bottom-width: 0px;
+  border-bottom-color: black;
+  border-left-style: none;
+  border-left-width: 0px;
+  border-left-color: black;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  background-color: #f3f3f3;
+  transition-property: all;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+  font-weight: 500;
+}
+
+.routes:hover {
+  color: #EB600A;
+}
+.index-item {
+  display: flex;
+  align-items: center;
+  grid-column-gap: 10px;
+  grid-row-gap: 10px;
+  font-size: 13px;
+  line-height: 13px;
+  font-weight: 500;
+}
+@media screen and (max-width: 767px) {
+.index-item {
+  flex-direction: column;
+  flex-wrap: wrap;
+  text-align: center;
+  display: none;
+  min-width: 46%;
+  align-items: flex-start;
+  flex-grow: 0;
+  flex-shrink: 1;
+  flex-basis: auto;
+}
+
+}
+.pin-icon-ex {
+  width: 30px;
+}
+@media screen and (max-width: 1024px) {
+.pin-icon-ex {
+  width: 30px;
+}
+}
+.truck-stops-block {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0%;
+  grid-column-gap: 20px;
+  grid-row-gap: 20px;
+}
+.div-block-7 {
+  position: relative;
+}
+.search-outer {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 50%;
+  max-width: 500px;
+  min-width: 300px;
+}
+@media screen and (max-width: 767px) {
+.search-outer {
+  left: 60px;
+  width: auto;
+  max-width: none;
+  min-width: auto;
+}
+}
+.search-outer input {
+    width: 100%;
+    border-radius: 5px;
+    background-color: white!important;
+}
+.map {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  height: 600px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  background-color: hsla(0, 0.00%, 98.00%, 1.00);
+}
+@media screen and (max-width: 767px) {
+.map {
+  height: 70svh;
+}
+}
+</style>      
+<div class="map-sections">
+<div class="hide">
+  <div class="marker-cluster-small">
+    <div>22</div>
+  </div>
+  <div class="marker-cluster-medium">
+    <div>22</div>
+  </div>
+  <div class="marker-cluster-large">
+    <div>22</div>
+  </div>
+</div>
+<div class="map-sections inside left">
+  <div class="map-subtitle details">Showing <span id="count" class="filter-count">#</span> of <span id="total" class="filter-count">#</span> Depots</div>
+  <div id="subtitle-scroll" class="map-subtitle">Filter by Route</div>
+  <div class="route-filter w-form">
+    <form id="email-form" name="email-form" data-name="Email Form" method="get" data-wf-page-id="64817fd1bc7996f2d772672b" data-wf-element-id="2d0dfb5f-f52e-4e3b-3f52-c816ff374a11"><select id="routeFilter" name="field" data-name="Field" class="routes w-select">
+        <option value="all">All</option>
+        <option value="N1">N1</option>
+        <option value="N1N">N1N</option>
+        <option value="N2">N2</option>
+        <option value="N3">N3</option>
+        <option value="N4E">N4E</option>
+        <option value="N4W">N4W</option>
+        <option value="N5">N5</option>
+        <option value="N6">N6</option>
+        <option value="N7">N7</option>
+        <option value="N10">N10</option>
+        <option value="N11">N11</option>
+        <option value="N12">N12</option>
+        <option value="N14">N14</option>
+        <option value="Coal">Coal</option>
+        <option value="Manganese">Manganese</option>
+        <option value="Maputo_Corridor">Maputo Corridor</option>
+        <option value="Cross_Border">Cross Border</option>
+      </select></form>
+  </div>
+  <div class="map-subtitle hidden">Legend</div>
+  <div class="index-item"><img src="https://tfn.co.za/wp-content/uploads/2024/09/r2sPlus.svg" loading="lazy" alt="" class="pin-icon-ex">
+    <div>Refuel2Save+</div>
+  </div>
+  <div class="index-item"><img src="https://tfn.co.za/wp-content/uploads/2024/09/r2s.svg" loading="lazy" alt="" class="pin-icon-ex">
+    <div>Refuel2Save</div>
+  </div>
+  <div class="index-item"><img src="https://tfn.co.za/wp-content/uploads/2024/09/newCs.svg" loading="lazy" alt="" class="pin-icon-ex">
+    <div>Classic</div>
+  </div>
+  <div class="index-item"><img src="https://tfn.co.za/wp-content/uploads/2024/09/cb.svg" loading="lazy" alt="" class="pin-icon-ex">
+    <div>Cross Border</div>
+  </div>
+  <div class="index-item"><img src="https://uploads-ssl.webflow.com/6472f1355908e6f00acadae4/64ef0a66717532eb4614e6f0_Red%20Locator.svg" loading="lazy" alt="" class="pin-icon-ex">
+    <div>Search Marker</div>
+  </div>
+</div>
+<div class="truck-stops-block">
+  <div class="div-block-7">
+    <div class="search-outer w-embed">
+      <div class="auto-search-wrapper">
+        <input type="text" autocomplete="on" id="search" class="full-width" placeholder="Enter the city name">
+      </div>
+    </div>
+    <div id="map" class="map"></div>
+  </div>
+</div>
+</div>
