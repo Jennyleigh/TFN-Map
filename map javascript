@@ -8,9 +8,7 @@ const options = {
 function initMap(locations) {
     const total = document.getElementById("total");
     const filterCount = document.getElementById("count");
-zovtlt-codex/add-filtering-and-route-planning-functionality
     locations = Array.isArray(locations) ? locations : [];
- main
     let markers = [];
     let loTotal = 0;
     let loCount = 0;
@@ -46,6 +44,18 @@ zovtlt-codex/add-filtering-and-route-planning-functionality
         iconSize: [40, 50],
         iconAnchor: [20, 50],
         popupAnchor: [0, -45]
+    });
+    var r2sLarge = L.icon({
+        iconUrl: "https://tfn.co.za/wp-content/uploads/2024/09/r2s.svg",
+        iconSize: [50, 60],
+        iconAnchor: [25, 60],
+        popupAnchor: [0, -55]
+    });
+    var r2sPlusLarge = L.icon({
+        iconUrl: "https://tfn.co.za/wp-content/uploads/2024/09/r2sPlus.svg",
+        iconSize: [50, 60],
+        iconAnchor: [25, 60],
+        popupAnchor: [0, -55]
     });
     var ss = L.icon({
         iconUrl: 'https://tfn.co.za/wp-content/uploads/2024/09/newCs.svg',
@@ -104,6 +114,12 @@ zovtlt-codex/add-filtering-and-route-planning-functionality
         Base Price: <sup>R</sup><strong>${location.price}</strong><br>
         <a target="_blank" href="http://maps.google.com/maps?ll=${GPSLatitude},${GPSLongitude}">Open in Google Maps</a><br><br>${products}`).addTo(map);
     	marker.depotData = location;
+          marker.defaultIcon = mapIcon;
+          if (location.isRefuel2SaveDepot) {
+              marker.r2sType = location.hasRefuel2SavePlusPromotions ? "plus" : "base";
+          } else {
+              marker.r2sType = null;
+          }
     	// marker.bindTooltip("my tooltip text").openTooltip();
       loTotal ++;
       markers.push(marker);
@@ -127,6 +143,7 @@ zovtlt-codex/add-filtering-and-route-planning-functionality
       markers.forEach(function(marker) {
         var depotData = marker.depotData;
         var show = true;
+        marker.setIcon(marker.defaultIcon);
 
         if (selectedRoute !== 'all') {
           if (selectedRoute === 'Cross_Border') {
@@ -240,12 +257,20 @@ zovtlt-codex/add-filtering-and-route-planning-functionality
         markers.forEach(function(marker) {
           if (!marker.visible) { marker.remove(); return; }
           const near = coords.some(pt => marker.getLatLng().distanceTo(pt) <= 10000);
-          if (near) {
-            marker.addTo(map);
-            count++;
-          } else {
-            marker.remove();
-          }
+            if (near) {
+              if (marker.r2sType === "base") {
+                marker.setIcon(r2sLarge);
+              } else if (marker.r2sType === "plus") {
+                marker.setIcon(r2sPlusLarge);
+              } else {
+                marker.setIcon(marker.defaultIcon);
+              }
+              marker.addTo(map);
+              count++;
+            } else {
+              marker.setIcon(marker.defaultIcon);
+              marker.remove();
+            }
         });
         filterCount.innerText = count;
       });
@@ -415,16 +440,3 @@ fetchLocations()
     console.error('Failed to load depot data', err);
     initMap([]);
   });
-=======
-fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnData', options)
-  .then(res => res.json())
-  .then(data => {
-    console.log(data);
-    initMap(data.body || data);
-  })
-  .catch(err => {
-    console.error(err);
-    initMap([]);
-  });
-</script>
- main

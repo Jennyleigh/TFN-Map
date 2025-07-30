@@ -292,17 +292,14 @@
   position: relative;
 }
 .search-outer {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
+  position: relative;
+  margin-bottom: 10px;
   width: 50%;
   max-width: 500px;
   min-width: 300px;
 }
 @media screen and (max-width: 767px) {
 .search-outer {
-  left: 60px;
   width: auto;
   max-width: none;
   min-width: auto;
