@@ -9,6 +9,7 @@ const options = {
 function initMap(locations) {
     const total = document.getElementById("total");
     const filterCount = document.getElementById("count");
+    locations = Array.isArray(locations) ? locations : [];
     let markers = [];
     let loTotal = 0;
     let loCount = 0;
@@ -380,7 +381,17 @@ fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnDat
   .then(res => res.json())
   .then(data => {
     console.log(data);
-    initMap(data.body || data);
+    let locations = [];
+    if (data.body) {
+      try {
+        locations = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
+      } catch (e) {
+        console.error('Error parsing response body', e);
+      }
+    } else if (Array.isArray(data)) {
+      locations = data;
+    }
+    initMap(locations);
   })
   .catch(err => {
     console.error(err);
