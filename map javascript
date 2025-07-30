@@ -1,4 +1,3 @@
-<script type="application/javascript">
 const options = {
   method: 'GET',
   headers: {
@@ -9,18 +8,24 @@ const options = {
 function initMap(locations) {
     const total = document.getElementById("total");
     const filterCount = document.getElementById("count");
+zovtlt-codex/add-filtering-and-route-planning-functionality
+    locations = Array.isArray(locations) ? locations : [];
+ main
     let markers = [];
     let loTotal = 0;
     let loCount = 0;
-    /*let markersGroup = L.markerClusterGroup({
-    	spiderfyOnMaxZoom: true,
-    	showCoverageOnHover: true,
-    	zoomToBoundsOnClick: true,
-      animate: true,
-      maxClusterRadius: 0
-    });*/
-    
-    console.log(locations);
+    /*
+     * Removed the marker cluster group for now. If clustering is desired in the
+     * future the configuration below can be re-enabled.
+     *
+     * let markersGroup = L.markerClusterGroup({
+     *   spiderfyOnMaxZoom: true,
+     *   showCoverageOnHover: true,
+     *   zoomToBoundsOnClick: true,
+     *   animate: true,
+     *   maxClusterRadius: 0
+     * });
+     */
     
     // Initialize the map
     const map = L.map('map', { dragging: !L.Browser.mobile, scrollWheelZoom: false }).setView([-25.146930436088034, 25.346189591867144], 5);
@@ -108,7 +113,6 @@ function initMap(locations) {
     filterCount.innerText = loTotal;
     total.innerText = loTotal;
     
-    console.log(map);
     
     var dropdown = document.getElementById('routeFilter');
     var priceDropdown = document.getElementById('priceFilter');
@@ -311,7 +315,7 @@ function initMap(locations) {
       },
     
       onSelectedItem: ({ index, element, object }) => {
-        console.log("onSelectedItem:", index, element, object);
+        // item selected from search dropdown
       },
     
       noResults: ({ currentValue, template }) =>
@@ -376,6 +380,42 @@ routeBtns.forEach((route) => {
 })
 }
 
+// zovtlt-codex/add-filtering-and-route-planning-functionality
+function fetchLocations(retries = 3, delay = 1000) {
+  return fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnData', options)
+    .then(res => {
+      if (!res.ok) throw new Error(res.statusText);
+      return res.json();
+    })
+    .catch(err => {
+      if (retries > 0) {
+        console.warn('Fetch failed, retrying...', err);
+        return new Promise(resolve => setTimeout(resolve, delay))
+          .then(() => fetchLocations(retries - 1, delay * 2));
+      }
+      throw err;
+    });
+}
+
+fetchLocations()
+  .then(data => {
+    let locations = [];
+    if (data.body) {
+      try {
+        locations = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
+      } catch (e) {
+        console.error('Error parsing response body', e);
+      }
+    } else if (Array.isArray(data)) {
+      locations = data;
+    }
+    initMap(locations);
+  })
+  .catch(err => {
+    console.error('Failed to load depot data', err);
+    initMap([]);
+  });
+=======
 fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnData', options)
   .then(res => res.json())
   .then(data => {
@@ -387,3 +427,4 @@ fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnDat
     initMap([]);
   });
 </script>
+ main
