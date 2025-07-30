@@ -1,0 +1,289 @@
+<script type="application/javascript">
+const options = {
+  method: 'GET',
+  headers: {
+    accept: 'application/json'
+  }
+};
+
+fetch('https://6f6twe9e95.execute-api.eu-north-1.amazonaws.com/default/getTfnData', options)
+  .then(response => response.json())
+  .then(response => {
+    console.log(response)
+    const total = document.getElementById("total");
+    const filterCount = document.getElementById("count");
+    // Assuming your array of objects is stored in a variable called `locations`
+    let locations = response.body;
+    let markers = [];
+    let loTotal = 0;
+    let loCount = 0;
+    /*let markersGroup = L.markerClusterGroup({
+    	spiderfyOnMaxZoom: true,
+    	showCoverageOnHover: true,
+    	zoomToBoundsOnClick: true,
+      animate: true,
+      maxClusterRadius: 0
+    });*/
+    
+    console.log(locations);
+    
+    // Initialize the map
+    const map = L.map('map', { dragging: !L.Browser.mobile, scrollWheelZoom: false }).setView([-25.146930436088034, 25.346189591867144], 5);
+    map.addControl(new L.Control.Fullscreen());
+    // Add the tile layer (you can choose a different tile provider if desired)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    
+    var r2s = L.icon({
+        iconUrl: 'https://tfn.co.za/wp-content/uploads/2024/09/r2s.svg',
+        iconSize: [34, 44.5],
+        iconAnchor: [17, 44.5],
+        popupAnchor: [0, -45]
+    });
+    var r2sPlus = L.icon({
+        iconUrl: 'https://tfn.co.za/wp-content/uploads/2024/09/r2sPlus.svg',
+        iconSize: [34, 44.5],
+        iconAnchor: [17, 44.5],
+        popupAnchor: [0, -45]
+    });
+    var ss = L.icon({
+        iconUrl: 'https://tfn.co.za/wp-content/uploads/2024/09/newCs.svg',
+        iconSize: [34, 44.5],
+        iconAnchor: [17, 44.5],
+        popupAnchor: [0, -45]
+    });
+    var cb = L.icon({
+        iconUrl: 'https://tfn.co.za/wp-content/uploads/2024/09/cb.svg',
+        iconSize: [34, 44.5],
+        iconAnchor: [17, 44.5],
+        popupAnchor: [0, -45]
+    });
+    
+    var city = L.icon({
+        iconUrl: 'https://uploads-ssl.webflow.com/6472f1355908e6f00acadae4/64ef0a66717532eb4614e6f0_Red%20Locator.svg',
+        iconSize: [34, 44.5],
+        iconAnchor: [17, 44.5],
+        popupAnchor: [0, -45]
+    });
+    
+    // Iterate through the locations array and add markers to the map
+    locations.forEach(location => {
+      const GPSLatitude = location.GPSLatitude;
+      const GPSLongitude = location.GPSLongitude;
+      let mapIcon, site, price;
+      if (!location.IsInSouthAfrica) {
+      	mapIcon = cb;
+        site = "Cross Border";
+        price = `${location.price}`;
+      } else if (location.isRefuel2SaveDepot) {
+            if (location.hasRefuel2SavePlusPromotions) {
+              	mapIcon = r2sPlus;
+                site = "Refuel2Save+";
+                price = `${location.price}`;
+            } else {
+                mapIcon = r2s;
+                site = "Refuel2Save";
+                price = `${location.price}`;
+            }
+      } else if (!location.isRefuel2SaveDepot && location.IsInSouthAfrica) {
+      	mapIcon = ss;
+        site = "Classic";
+        price = `${location.price}`;
+      }
+      let products = "<strong>Products</strong><br><ul>";
+      [...location.Products].forEach((prod) => {
+          products += `<li>${prod.ProductTitle}</li>`;
+      })
+      products += "</ul>";
+      var marker = L.marker([GPSLatitude, GPSLongitude], {
+      	icon: mapIcon,
+        title: "Depot"
+      }).bindPopup(`<h6 style="max-width: 15ch; text-wrap: balance;">${location.Title}</h6>
+        Type: <strong>${site}</strong><br>
+        Base Price: <sup>R</sup><strong>${location.price}</strong><br>
+        <a target="_blank" href="http://maps.google.com/maps?ll=${GPSLatitude},${GPSLongitude}">Open in Google Maps</a><br><br>${products}`).addTo(map);
+    	marker.depotData = location;
+    	// marker.bindTooltip("my tooltip text").openTooltip();
+      loTotal ++;
+      markers.push(marker);
+    });
+    
+    //map.addLayer(markersGroup);
+    filterCount.innerText = loTotal;
+    total.innerText = loTotal;
+    
+    console.log(map);
+    
+    var dropdown = document.getElementById('routeFilter');
+    dropdown.addEventListener('change', function() {
+      var selectedRoute = this.value;
+      var loCount = 0;
+    
+      // Check if the selected option is "all"
+      if (selectedRoute === 'all') {
+        // Show all markers with staggered animation
+        markers.forEach(function(marker, index) {
+          marker.remove();
+          marker.addTo(map);
+          loCount++;
+        });
+      } else if (selectedRoute === 'Cross_Border') {
+        markers.forEach(function(marker, index) {
+          var depotData = marker.depotData;
+          var routeValue = !depotData.IsInSouthAfrica;
+          if (routeValue === true) {
+            marker.addTo(map);
+            loCount++;
+          } else {
+            // Hide marker
+            marker.remove();
+          }
+        });
+      } else {
+        // Loop through the markers and show/hide based on the selected route
+        markers.forEach(function(marker, index) {
+          var depotData = marker.depotData;
+          var routeValue = depotData[selectedRoute];
+          if (routeValue === "True") {
+            marker.addTo(map);
+            loCount++;
+          } else {
+            // Hide marker
+            marker.remove();
+          }
+        });
+      }
+      filterCount.innerText = loCount;
+      console.log(markers);
+    });
+    
+    // minimal configure
+    new Autocomplete("search", {
+      selectFirst: true,
+      howManyCharacters: 2,
+      onSearch: ({ currentValue }) => {
+        const api = `https://nominatim.openstreetmap.org/search?format=geojson&limit=5&city=${encodeURI(
+          currentValue
+        )}`;
+    
+        return new Promise((resolve) => {
+          fetch(api)
+            .then((response) => response.json())
+            .then((data) => {
+              resolve(data.features);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        });
+      },
+    
+      onResults: ({ currentValue, matches, template }) => {
+        const regex = new RegExp(currentValue, "gi");
+    
+        return matches === 0
+          ? template
+          : matches
+              .map((element) => {
+                return `
+              <li class="loupe">
+                <p>
+                  ${element.properties.display_name.replace(
+                    regex,
+                    (str) => `<b>${str}</b>`
+                  )}
+                </p>
+              </li> `;
+              })
+              .join("");
+      },
+    
+      onSubmit: ({ object }) => {
+        // remove all layers from the map
+        markers.forEach(function(marker) {
+          if (marker.title === "City") {
+            marker.removeFrom(map);
+          }
+        });
+        
+        const { display_name } = object.properties;
+        const [lng, lat] = object.geometry.coordinates;
+    
+        const marker = L.marker([lat, lng], {
+          icon: city,
+          title: "City",
+        });
+    
+        marker.addTo(map).bindPopup(display_name);
+        markers.push(marker);
+    
+        map.setView([lat, lng], 9);
+      },
+    
+      onSelectedItem: ({ index, element, object }) => {
+        console.log("onSelectedItem:", index, element, object);
+      },
+    
+      noResults: ({ currentValue, template }) =>
+        template(`<li>No results found: "${currentValue}"</li>`),
+    });
+  })
+  .catch(err => console.error(err));
+
+let routeDropdown = document.getElementById("routeFilter");
+let nThreeButton = document.getElementById("n3");
+let maputoButton = document.getElementById("maputo");
+let coalButton = document.getElementById("coal");
+let crossButton = document.getElementById("cross");
+let manganeseButton = document.getElementById("manganese");
+const routeLearnBtn = document.getElementById("routeLearn");
+
+let routeBtns = [
+    {
+        btn: nThreeButton,
+        val: "N3",
+        link: "https://tfn.co.za/n3/"
+    },
+    {
+        btn: maputoButton,
+        val: "Maputo_Corridor",
+        link: "https://tfn.co.za/maputo-corridor/"
+    },
+    {
+        btn: coalButton,
+        val: "Coal",
+        link: "https://tfn.co.za/coal-corridor/"
+    },
+    {
+        btn: crossButton,
+        val: "Cross_Border",
+        link: "#"
+    },
+    {
+        btn: manganeseButton,
+        val: "Manganese",
+        link: "https://tfn.co.za/manganese/"
+    }
+];
+
+routeLearnBtn.style.display = "none";
+routeBtns.forEach((route) => {
+    route.btn.addEventListener("click", function() {
+        routeBtns.forEach(btn => {
+            btn.btn.querySelector("a").classList.remove("active");
+        });
+        routeDropdown.value = route.val;
+        let changeEvent = new Event('change');
+        routeDropdown.dispatchEvent(changeEvent);
+        route.btn.querySelector("a").classList.add("active");
+        if (route.link === "#") {
+            routeLearnBtn.style.display = "none";
+        } else {
+            routeLearnBtn.href = route.link;
+            routeLearnBtn.innerText = `Learn More about ${route.btn.innerText}`;
+            routeLearnBtn.style.display = "inline-block";
+        }
+    })
+})
+</script>
